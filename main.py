@@ -2,11 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.svm import SVC
 
 
 def load_data(file_path):
@@ -122,20 +124,45 @@ if __name__ == "__main__":
 
     X_train_pca, X_test_pca = apply_pca(X_train, X_test)
 
-    pipeline = Pipeline([
-        ('classifier', RandomForestClassifier(random_state=42))
-    ])
+    from sklearn.ensemble import BaggingClassifier
 
-    param_grid = {
-        'classifier__n_estimators': [50, 100, 200],
-        'classifier__max_depth': [None, 10, 20, 30],
-        'classifier__min_samples_split': [2, 5, 10],
-        'classifier__min_samples_leaf': [1, 2, 4]
-    }
+    models = [
+        ('RandomForest', RandomForestClassifier(random_state=42), {
+            'classifier__n_estimators': [50, 100, 200],
+            'classifier__max_depth': [None, 10, 20, 30],
+            'classifier__min_samples_split': [2, 5, 10],
+            'classifier__min_samples_leaf': [1, 2, 4]
+        }),
+        ('Bagging', BaggingClassifier(random_state=42), {
+            'classifier__n_estimators': [10, 50, 100],
+            'classifier__max_samples': [0.5, 0.7, 1.0],
+            'classifier__max_features': [0.5, 0.7, 1.0]
+        }),
+        ('LogisticRegression', LogisticRegression(max_iter=200, random_state=42), {
+            'classifier__C': [0.01, 0.1, 1, 10, 100],
+            'classifier__penalty': ['l2'],
+            'classifier__solver': ['newton-cg', 'lbfgs', 'liblinear']
+        }),
+        ('GradientBoosting', GradientBoostingClassifier(random_state=42), {
+            'classifier__n_estimators': [50, 100, 200],
+            'classifier__learning_rate': [0.01, 0.1, 0.2, 0.3],
+            'classifier__max_depth': [3, 5, 7, 9],
+            'classifier__subsample': [0.8, 0.9, 1.0]
+        })
+    ]
 
-    grid_search = GridSearchCV(pipeline, param_grid, cv=5, scoring='f1_micro', n_jobs=-1)
-    grid_search.fit(X_train, y_train)
+    for name, model, param_grid in models:
+        print(f"Evaluating {name}...")
+        pipeline = Pipeline([
+            ('scaler', StandardScaler()),
+            ('classifier', model)
+        ])
 
-    best_model = grid_search.best_estimator_
-    evaluate_model(best_model, X_test, y_test)
+        grid_search = GridSearchCV(pipeline, param_grid, cv=5, scoring='f1_macro', n_jobs=-1)
+        grid_search.fit(X_train, y_train)
+
+        print(f"Best parameters for {name}: {grid_search.best_params_}")
+
+        best_model = grid_search.best_estimator_
+        evaluate_model(best_model, X_test, y_test)
     # endregion
