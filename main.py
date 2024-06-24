@@ -81,13 +81,6 @@ def apply_pca(X_train, X_test, n_components=0.95):
     X_test_pca = pca.transform(X_test)
     return X_train_pca, X_test_pca
 
-
-def train_model(X_train, y_train):
-    model = RandomForestClassifier(random_state=42)
-    model.fit(X_train, y_train)
-    return model
-
-
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
