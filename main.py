@@ -8,7 +8,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.svm import SVC
 
 
 def load_data(file_path):
@@ -22,7 +21,6 @@ def preprocess_data(df, target):
         df[column] = le.fit_transform(df[column])
         label_encoders[column] = le
 
-    # df = remove_outliers_iqr(df)
     X = df.drop(columns=[target])
     y = df[target]
     return X, y
@@ -50,14 +48,18 @@ def plot_correlation_matrix(df):
 
 
 def plot_distributions(df):
-    numeric_df = df.select_dtypes(include=['number'])
+    columns = ['Cholesterol', 'Tryglicerides', 'Platelets', 'Albumin', 'Copper', 'Prothrombin', 'Alk_Phos',
+                        'SGOT', 'Bilirubin']
+    numeric_df = df[columns]
     numeric_df.hist(bins=30, figsize=(20, 15))
     plt.tight_layout()
     plt.show()
 
 
 def plot_boxplots(df):
-    numeric_df = df.select_dtypes(include=['number'])
+    columns = ['Cholesterol', 'Tryglicerides', 'Platelets', 'Albumin', 'Copper', 'Prothrombin', 'Alk_Phos',
+               'SGOT', 'Bilirubin']
+    numeric_df = df[columns]
     plt.figure(figsize=(20, 15))
     for i, column in enumerate(numeric_df.columns, 1):
         plt.subplot(4, 5, i)
