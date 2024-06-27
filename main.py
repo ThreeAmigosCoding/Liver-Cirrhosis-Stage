@@ -123,6 +123,7 @@ def train_models():
     ]
 
     for name, model, param_grid in models:
+        print("\n")
         print(f"Evaluating {name}...")
         pipeline = Pipeline([
             ('scaler', StandardScaler()),
